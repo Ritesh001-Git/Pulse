@@ -1,0 +1,69 @@
+# ============ Secrets & environment ============
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ============ Python (backend) ============
+backend/.venv/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ============ Node (frontend) ============
+frontend/node_modules/
+node_modules/
+frontend/dist/
+dist/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ============ macOS ============
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+Icon?
+
+# ============ IDEs / editors ============
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+
+# ============ Logs & runtime ============
+*.log
+logs/
+*.pid
+*.seed
+
+# ============ Docker ============
+**/__pycache__
+docker-compose.override.yml
+
+# ============ Misc generated / local artifacts ============
+transcripts/
+*.local
+*.bak
+*.tmp
+coverage/
