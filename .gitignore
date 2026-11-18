@@ -60,10 +60,3 @@ logs/
 # ============ Docker ============
 **/__pycache__
 docker-compose.override.yml
-
-# ============ Misc generated / local artifacts ============
-transcripts/
-*.local
-*.bak
-*.tmp
-coverage/
