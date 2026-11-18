@@ -1,98 +1,52 @@
-# Pulse — Progress Log
+# Pulse — Completed Work
 
-Last updated: Nov 18, 2026
+## Overview
 
-## Overall status: MVP complete, end-to-end verified ✅
+Pulse has a React dashboard and a FastAPI backend connected to PostgreSQL. The work completed so far covers service monitoring, incident tracking, webhook delivery, reliability metrics, authentication, and a public status page.
 
-The platform is fully functional as a self-hosted monitoring + incident management product:
-scheduler running, incidents auto-detected and auto-resolved, webhook notifications delivered,
-metrics/SLOs computed from real data, login + protected dashboard working, and all six pages
-rendering real backend data with zero console errors.
+## Planning and documentation
 
----
+- Documented the initial architecture, API design, and implementation phases in `Plan.md`.
+- Added `design.md` with an architecture and feature overview.
+- Updated `README.md` with setup instructions, features, API information, and development credentials.
+- Added a root `.gitignore` for local environment files, dependencies, build output, caches, and other generated files.
 
-## Completed
+## Backend and database
 
-### Phase 0 — Planning
-- [x] `plan.md`: architecture evaluation, component breakdown, API contract design.
+- Created async FastAPI and SQLAlchemy integration with PostgreSQL.
+- Added database models for users, services, health checks, incidents, timeline events, notifications, webhook channels, subscribers, and maintenance windows.
+- Added development schema bootstrap, connection timeouts, transient-error handling, and database health endpoints.
+- Added a database constraint limiting each service to one active incident.
+- Implemented APIs for services, incidents, metrics, webhook channels, authentication, and public status data. API responses use camelCase fields and epoch-millisecond timestamps.
 
-### Phase 1 — Database & resilience
-- [x] All models: User, Service, CheckResult, Incident, TimelineEvent, Notification,
-      MaintenanceWindow, Subscriber, WebhookChannel.
-- [x] PG-native enums (8 types) via `_pg_enum()` helper with `values_callable` (asyncpg quirk).
-- [x] Partial unique index `uq_incidents_service_active` — one active incident per service.
-- [x] Resilience layer (`app/resilience.py`): transient-error classification, retry helpers,
-      `DatabaseUnavailable` → clean 503 mapping; 5s connect / 10s command timeouts; pool pre-ping.
-- [x] DB failure drill verified live: 200 on `/health`, 503 on `/health/db` during outage,
-      monitoring loop survives and buffers.
-- [x] Dev bootstrap: `create_all_with_enums()` + idempotent `COLUMN_MIGRATIONS` + startup retry.
+## Monitoring and service registration
 
-### Phase 2 — Backend APIs
-- [x] Routers: services (CRUD + checks + on-demand check-now), incidents (full lifecycle),
-      metrics (uptime/latency p50-p95/incidents+MTTR/SLO+error-budgets), public (status, incidents,
-      uptime, subscribe/unsubscribe), auth (login/logout/me), ops (health/db-health), channels
-      (webhook config + delivery history).
-- [x] camelCase wire contract + epoch-ms timestamps (`app/serializers.py`, `app/schemas.py`).
-- [x] HMAC bearer-token auth with `PULSE_AUTH_ENABLED` toggle; seeded admin.
-- [x] CORS for the frontend; `email-validator` installed.
+- Implemented a scheduler that loads active services from the database and runs health checks using asyncio and httpx. It uses per-service intervals and timeouts and a configurable concurrency limit.
+- Added an in-flight guard for scheduled checks and a bounded in-memory buffer for checks that cannot be saved immediately.
+- Separated response classification and service-state transitions into `backend/app/state.py`.
+- Implemented failure and recovery thresholds, latency-based degradation, and persistent state counters.
+- Added worst-in-streak incident severity detection and escalation from degradation to outage.
+- Connected the **Register Service** form to the backend, with validation, duplicate-name feedback, persistence, and scheduler pickup.
+- Added service editing, a confirmation step for deletion, and an on-demand check action in the service detail page.
 
-### Phase 3 — State machine & detection
-- [x] `app/state.py`: pure, unit-tested state logic (19/19 tests pass):
-      - classify: error/timeout/non-2xx-3xx → down; 2xx/3xx above degraded-latency → degraded; else up
-      - transitions: threshold-based (failure_threshold, recovery_threshold), flapping suppressed,
-        `down` never downgraded by `degraded`, recovery needs consecutive ups
-- [x] Streak-based incident detection with **worst-in-streak severity**:
-      - down,down,degraded → OUTAGE (degraded can't downgrade)
-      - degraded streak + down → escalation + timeline event
-      - streaks reset at `up` (no cross-recovery bleed)
-- [x] Scenario harness (`backend/scripts/detection-drill.sh`): 6 scenarios, all PASS live.
+## Incidents and webhook notifications
 
-### Phase 4 — Monitoring scheduler
-- [x] `app/engines/scheduler.py`: per-service independent asyncio tasks, configurable global
-      concurrency (semaphore), no-overlap guard (in-flight set), per-service interval/timeout
-      respected, all results persisted, buffered during DB outage + auto-flush on recovery,
-      service list re-read each tick (new services auto-monitored).
-- [x] Live transition demo verified: healthy→down at threshold, down→healthy only after 2 ups,
-      degraded escalation, degraded-during-down stays down.
+- Added automatic incident detection, recovery-based resolution, and reopening of recently resolved incidents.
+- Added manual incident filing, acknowledgement, status updates, notes, resolution, and timeline views.
+- Implemented webhook channel configuration, delivery attempts with retries, and delivery-history records.
+- Added a Notifications page for viewing delivery outcomes.
 
-### Phase 5 — Incident lifecycle & notifications
-- [x] Auto-resolve after sustained recovery (recovery_threshold ups) + timeline event.
-- [x] Reopen-vs-new: 15-min cooldown reopens the same incident (≤3 cycles); older re-breaks open new.
-- [x] Complete timeline: auto_detected, acked, status_changed, note, resolved, reopened, escalated.
-- [x] `app/engines/notifier.py`: webhook fan-out per lifecycle event (created/acknowledged/updated/
-      resolved/reopened/escalated), 3 attempts with backoff (0.5/1.5/4s), 5s timeout, fire-and-forget
-      (never blocks incident flow), per-event-per-channel history rows with outcome detail.
-- [x] Channels API: CRUD + service-scoped channels + `GET /api/channels/deliveries`.
-- [x] Live drill: kit receiver got every event (200 on attempt 1); dead endpoint retried → `failed`
-      with detail; auto-resolve delivered; reopen delivered.
+## Metrics and frontend
 
-### Phase 6 — Frontend
-- [x] All 6 pages (Overview, Services, ServiceDetail, Incidents, IncidentDetail, PublicStatus)
-      + Login + Notifications; TanStack Query throughout; skeletons/error-retry everywhere.
-- [x] Mock data fully removed; every page renders real backend data.
-- [x] Auth: Login page, AuthProvider, Protected routes, token injection, 401 → auto sign-out
-      + redirect, sidebar shows real user + sign-out.
-- [x] SLO/error-budget table with bars on Overview; Notifications delivery-history page.
-- [x] Status page guidance banner (our-side vs your-side), no auth, no internal data leak.
+- Added uptime, latency percentile, incident count, MTTR, SLO, and error-budget endpoints based on database records.
+- Built the Overview, Services, Service Detail, Incidents, Incident Detail, Notifications, Login, and Public Status pages using real backend data.
+- Added login, bearer-token requests, protected dashboard routes, sign-out, loading and error states, charts, and status badges.
+- Added SLO and error-budget information to the Overview page and a standalone public status page.
 
-### Phase 7 — Integration hardening (final sweep)
-- [x] **Register Service** complete flow: modal form, validation, POST, 409 surfacing, success
-      screen, scheduler auto-pickup — all verified in the browser.
-- [x] **File Incident** modal wired and verified.
-- [x] ServiceDetail "Run check now" (result badge) and "Edit" (full edit modal) functional.
-- [x] Rename-to-duplicate → clean 409 (was 500). Delete with two-step confirmation via UI.
-- [x] Owner null → "—"; subtitle "undefined" fix.
-- [x] Edge case: unreachable service → state machine degrades correctly, exactly one incident,
-      no crashes, no spam.
-- [x] Zero console errors across all pages; production build passes.
-- [x] `backend/requirements.txt` (pinned); README rewritten with setup, features, credentials,
-      limitations.
+## Verification completed during development
 
----
-
-## Remaining work (not started)
-
-- [ ] Email/SMS notification channels (models exist, not wired).
-- [ ] WebSocket/live updates (dashboard currently polls at 10s stale time).
-- [ ] Maintenance windows (pause detection during scheduled maintenance).
-- [ ] Status-page customization (custom domain, theming, per-service public messages editing).
+- Ran state-transition and mixed-failure scenarios, including recovery thresholds, escalation, and flapping.
+- Tested service registration, duplicate-name feedback, editing, deletion, and scheduler pickup through the browser.
+- Tested login, protected-route redirects, incident actions, and public status rendering.
+- Tested webhook delivery to the starter-kit receiver and retry/failure reporting for an unreachable endpoint.
+- Ran a database-outage drill and a frontend production build during development.
