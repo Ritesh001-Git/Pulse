@@ -1,0 +1,106 @@
+@import "./tokens.css";
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root { height: 100%; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 16px; font-weight: 600; }
+h3 { font-size: 14px; font-weight: 600; }
+
+.subtitle { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s ease;
+}
+.btn:hover { background: #fafafd; border-color: var(--border-strong); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary {
+  background: var(--brand); border-color: var(--brand); color: #fff;
+}
+.btn-primary:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
+.btn-danger { color: var(--down); border-color: #f3c2c2; background: var(--down-soft); }
+.btn-success { color: var(--up); border-color: #b7e4c7; background: var(--up-soft); }
+
+/* ---------- Badges ---------- */
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+.badge--up { background: var(--up-soft); color: var(--up); }
+.badge--degraded { background: var(--degraded-soft); color: var(--degraded); }
+.badge--down { background: var(--down-soft); color: var(--down); }
+.badge--maintenance { background: var(--maintenance-soft); color: var(--maintenance); }
+.badge--unknown { background: var(--unknown-soft); color: var(--unknown); }
+.badge--neutral { background: var(--unknown-soft); color: var(--text-secondary); }
+.badge--outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+
+/* ---------- Cards ---------- */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.card__header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+}
+.card__body { padding: 20px; }
+.card__title { font-size: 14px; font-weight: 600; }
+
+/* ---------- Tables ---------- */
+.table { width: 100%; border-collapse: collapse; }
+.table th {
+  text-align: left; padding: 10px 20px; font-size: 12px; font-weight: 600;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border); background: #fafbfd;
+}
+.table td { padding: 12px 20px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.table tr:last-child td { border-bottom: none; }
+.table--clickable tbody tr { cursor: pointer; transition: background 0.12s; }
+.table--clickable tbody tr:hover { background: #f8f9fc; }
+
+/* ---------- Forms ---------- */
+.textarea, .input, .select {
+  width: 100%; padding: 9px 12px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-family: var(--font); font-size: 13px;
+  color: var(--text); background: var(--surface); resize: vertical;
+}
+.textarea:focus, .input:focus, .select:focus {
+  outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+/* ---------- Utility ---------- */
+.row { display: flex; align-items: center; gap: 8px; }
+.spread { display: flex; align-items: center; justify-content: space-between; }
+.grid { display: grid; gap: 16px; }
+.muted { color: var(--text-muted); }
+.mono { font-family: var(--mono); font-size: 12px; }
+
+/* ---------- Loading skeleton ---------- */
+.skeleton {
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, #e8eaf1 25%, #f2f4f9 50%, #e8eaf1 75%);
+  background-size: 400% 100%;
+  animation: skeleton-wave 1.4s ease infinite;
+}
+@keyframes skeleton-wave {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
