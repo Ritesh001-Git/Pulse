@@ -25,3 +25,26 @@ Before we build the backend layer, add a proper DB error response. Safe retry fo
 
 #### 8. Backend Prompt
 So now let's implement the main backend APIs using FastAPI. Use the PostgreSQL database and the models that we already created. And use this API design from the plan.md. And we have to test the application against the Pulse starter kit that has a Docker compose file with some mock services like quotes, payment, claims, and notification. And also read the README.md file inside the pulse starter kit and create the backend according to that And connect the front end service page to this APIs. Replace the mock data and mock services with real backend data. And don't implement the monitoring scheduler yet. We will do that in later stages. And test the APIs fix any integration issue before moving forward
+
+#### 9. Challenged AI approach with my approach
+So before going ahead, suppose a service has a mixed failure response like two down checks followed by degraded check while using only the latest check to decide incident severity, always be reliable. I think this could sometimes classify incidents incorrectly. So can you review this approach, test different failure scenarios, and Instead of deciding only from one latest check, what if we use worst state like consecutively check threshold? For example, if an outage has already been detected, a later degraded check shouldn't downgrade its severity. So can you evaluate whether this is a better approach? Compare it with your current implementation and test different sequence such as down, degraded to down. And identify some edge cases
+
+Comparison summary
+Aspect	Old (latest-only)	New (worst-in-streak)
+down,down,degraded	❌ degradation	✅ outage
+downgrade protection	❌ none	✅ monotonic within streak
+escalation (degradation → outage)	❌ never	✅ with timeline event
+streak boundary correctness	❌ window crosses ups	✅ reset at up
+query cost	1 bounded query	2 small indexed queries
+
+#### 10. Incident management, notifications and reliability
+We can now implement the remaining incident management and the reliability feature. Ensure incident automatically resolve after the configured recovery threshold. Handle reopen versus new incident correctly and maintain a complete incident timeline. Implement notification for incident creation, incident creation, acknowledgement updates and resolution including retries, failure. Complete availability uptime latency . Test the complete incident and notification lifecycle, including failure scenarios.
+
+#### 11. Full integration, testing and final polish
+Now review Pulse as a complete application. Fix all integration bugs, UI issues, and missing edge cases. Specifically, fix the **Register Service button**—it currently appears static and doesn't work. Implement the complete registration flow, including the form, validation, API integration, database persistence, success/error feedback, and automatic inclusion of newly registered services in monitoring. Verify that authentication, scheduler, incidents, notifications, metrics, and public status page work together. Run end-to-end tests, fix issues, polish the UI, and update the README with setup instructions, features, and demo credentials. Report test results and remaining limitations.
+
+#### 12. Progress.md and Design.md
+Create `progress.md` to document completed tasks and overall progress. Additionally, create `design.md` to outline the platform's architecture, features, and other relevant details.
+
+#### 13. Prompt to create a .gitignore file
+Create a .gitignore file and list all files that should not be pushed to GitHub, such as the env file, virtual environment files, or any other unnecessary files from the frontend, backend, or elsewhere.
