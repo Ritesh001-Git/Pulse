@@ -7,33 +7,15 @@
 
 ---
 
-## 1. Evaluation of the Proposed Architecture
+# Evaluation of the Proposed Architecture with Additional Features and Add-ons
 
-**What's good:**
 - Clear separation of the three backend engines (Monitoring, Incident, Notification) — each has a distinct lifecycle and can be developed/tested independently.
 - React SPA for the internal dashboard plus a separate public status page is the right split: internal pages need auth, the status page needs to be public, fast, and cacheable.
 - FastAPI is a good fit: async-native (important for a monitoring loop hitting many health endpoints concurrently), Pydantic models, built-in background tasks, easy WebSocket support.
-
-**What's missing / needs to be added:**
-
-| Gap | Why it matters | Proposed addition |
-| --- | --- | --- |
-| **No database layer** | Everything must persist: services, checks, incidents, timeline events, users, notification prefs. | PostgreSQL (SQLModel/SQLAlchemy). SQLite acceptable for local dev. |
-| **No detection strategy definition** | "Detect failure" is easy (non-2xx), but *degradation* needs thresholds (latency, flakiness, consecutive failures). | Detection policy per service: failure threshold, latency threshold, grace/consecutive-failure counts to suppress flapping. |
-| **Flapping / hysteresis** | A flaky service that flickers up/down would spam incidents and notifications. | Require N consecutive failures to open an incident and M consecutive successes to close it. Reopen instead of creating a new incident if it re-breaks within a cooldown window. |
-| **Incident lifecycle states** | Acknowledgement is mentioned but the full state machine isn't. | `investigating → identified → monitoring → resolved`, plus `acknowledged` flag; degradation incidents vs. outage incidents. |
-| **Public status page decoupling** | It must work when the dashboard is down and never leak internal data (assignees, notes). | Public read-only API + a derived "overall status" computed from service states + active incidents. |
-| **Subscribers / customer notifications** | "Keep customers updated" needs a subscription mechanism, not just team notifications. | Email/webhook subscribers per service or global; subscriber receives incident opened/updated/resolved events. |
-| **Maintenance windows** | Planned downtime would otherwise trigger incidents. | Optional maintenance window that suppresses monitoring alerts. |
-| **Reliability metrics pipeline** | Needs check-history data to compute uptime %, MTTR, incident counts. | Store every check result (or rollups); compute uptime, availability, MTTR, MTBF on demand. |
-| **Auth & roles** | Engineers vs. support teams need at least basic auth + roles. | Simple session/JWT auth; roles: `admin`, `engineer`, `support`. Public endpoints unauthenticated. |
-| **Real-time updates for dashboard** | Polling every endpoint from the UI is wasteful. | WebSockets (or SSE) pushing check results and incident updates. |
-| **Audit trail** | Who acknowledged/resolved what, and when. | Timeline events already capture this if they record the actor. |
-| **Environment/deployment story** | How do Pulse, the mock services, and webhook receiver live together? | `docker-compose` extending the starter kit; async workers for the monitoring loop (asyncio task or dedicated worker process). |
-
+- Data Model (core tables) users, services, incidents, timeline_events
 ---
 
-## 2. Component Breakdown
+## Component Breakdown
 
 ```
 pulse/
